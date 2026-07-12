@@ -187,7 +187,7 @@ class AgentOrchestrator:
             "pnl_pct": round((total_balance - total_initial) / total_initial * 100 if total_initial > 0 else 0, 2),
             "total_trades": total_trades,
             "win_rate": round(total_wins / total_trades, 2) if total_trades > 0 else 0,
-            "agentes_activos": len([a for a in self.agents if a.risk.can_trade()]),
+            "agentes_activos": len([a for a in self.agents if a.agent_id != "treasury" and a.risk.can_trade()]),
             "total_agentes": len([a for a in self.agents if a.agent_id != "treasury"]),
         }
 

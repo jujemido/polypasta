@@ -52,21 +52,15 @@ function DashboardInner({ data }: { data: DashboardData }) {
 
       <header className="border-b border-border px-4 py-3 sm:px-6" role="banner">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-foreground text-background text-[9px] font-semibold tracking-widest uppercase px-1.5 py-px inline-block">
-              🏖️ Sandbox
-            </div>
-            <div>
-              <h1 className="text-lg font-bold tracking-tight">PolypastaBot</h1>
-              <p className="text-xs text-muted-foreground">Sistema multi-agente de trading</p>
-            </div>
-            <div className="text-[10px] text-muted-foreground tabular-nums">
-              {data.last_updated && (
-                <time dateTime={data.last_updated}>
-                  {new Date(data.last_updated).toLocaleString()}
-                </time>
-              )}
-            </div>
+          <div>
+            <h1 className="text-lg font-bold tracking-tight">PolypastaBot</h1>
+            <p className="text-xs text-muted-foreground">Sistema multi-agente de trading</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="bg-foreground text-background text-[9px] font-semibold tracking-widest uppercase px-1.5 py-px">🏖️ SANDBOX</span>
+            <time dateTime={data.last_updated} className="text-[10px] text-muted-foreground tabular-nums">
+              {data.last_updated ? new Date(data.last_updated).toLocaleString() : ''}
+            </time>
           </div>
         </div>
       </header>
@@ -86,11 +80,6 @@ function DashboardInner({ data }: { data: DashboardData }) {
               />
             ))}
           </div>
-          {activeAgents.size === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              Haz clic en un agente para ver sus datos
-            </p>
-          )}
         </section>
 
         {/* Charts & comparison */}
@@ -101,7 +90,7 @@ function DashboardInner({ data }: { data: DashboardData }) {
           )}
         </div>
 
-        {/* Positions & trade history */}
+        {/* Positions & history */}
         <PositionsHistory agents={sortedAgents} trades={data.recent_trades} selectedAgents={activeAgents} />
 
         {/* Agent logs */}
@@ -109,7 +98,7 @@ function DashboardInner({ data }: { data: DashboardData }) {
       </main>
 
       <footer className="border-t border-border px-4 py-3 text-center text-[10px] text-muted-foreground">
-        PolypastaBot · Los datos se actualizan cada 30 segundos
+        PolypastaBot · shadcn/ui · <a href="https://github.com/jujemido/polypasta" className="underline underline-offset-2">github.com/jujemido/polypasta</a>
       </footer>
     </div>
   )
@@ -118,6 +107,7 @@ function DashboardInner({ data }: { data: DashboardData }) {
 export default function App() {
   const { data, loading, error } = useDashboard()
   if (loading) return <Loading />
-  if (error || !data) return <ErrorView message={error || 'Sin datos'} />
+  if (error) return <ErrorView message={error} />
+  if (!data) return <Loading />
   return <DashboardInner data={data} />
 }
