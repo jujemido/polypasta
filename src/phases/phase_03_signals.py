@@ -1,12 +1,14 @@
 """
 Phase 3: Signals — Generar señales de trading según la estrategia del agente.
+
+Cada agente tiene su propia lógica de análisis inline (analizar()).
+Esta fase simplemente llama al método del agente.
 """
 from typing import Optional
-from src.strategies.factory import get_strategy
 
 
 class PhaseSignals:
-    """Genera señales de trading usando la estrategia del agente"""
+    """Genera señales de trading llamando a agent.analizar()"""
 
     def __init__(self, config: dict):
         self.config = config
@@ -16,16 +18,12 @@ class PhaseSignals:
         Analiza los indicadores y genera una señal (BUY/SELL/HOLD).
 
         Returns:
-            dict con {tipo, simbolo, precio, confianza, razon} o None
+            dict con {tipo, simbolo, precio, confianza, razon} o None si no hay señal
         """
-        from src.strategies.base import BaseStrategy
-
         agent = ctx["agent"]
-        strategy = get_strategy(self.config, agent_id=agent.agent_id)
-        if strategy is None:
-            return None
+        broker = ctx.get("broker")
 
-        action = strategy.calculate_signals(df, symbol=ctx["symbol"])
+        action = agent.analizar(broker, df, ctx["symbol"])
         if action is None:
             return None
 
