@@ -1,0 +1,16 @@
+# Dependencies
+venv/
+__pycache__/
+*.pyc
+.env
+
+# Data
+data/logs/
+data/dashboard.html
+data/historical/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

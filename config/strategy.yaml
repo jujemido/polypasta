@@ -1,0 +1,78 @@
+# =============================================================================
+# STRATEGY CONFIGURATION
+# =============================================================================
+# Cambia parámetros de estrategias aquí sin tocar código
+
+# --- Estrategia activa ---
+active_strategy: "mean_reversion"  # mean_reversion | sma_crossover
+
+# =============================================================================
+# STRATEGY 1: MEAN REVERSION (Bollinger Bands + RSI)
+# =============================================================================
+mean_reversion:
+  enabled: true
+  description: "Mean reversion en NASDAQ/SP500 usando Bollinger + RSI"
+
+  # --- Timeframe ---
+  timeframe: "1h"              # 1m, 5m, 15m, 30m, 1h, 4h, 1d
+  bars_to_fetch: 200           # Velas históricas a cargar
+
+  # --- Bollinger Bands ---
+  bollinger:
+    period: 20                 # Período SMA central
+    std_dev: 2.0               # Desviaciones estándar
+    std_dev_entry: 2.0         # STD para entrada (puede ser distinto)
+
+  # --- RSI ---
+  rsi:
+    period: 14                 # Período RSI
+    oversold: 30               # Límite sobreventa
+    overbought: 70             # Límite sobrecompra
+
+  # --- Volumen ---
+  volume:
+    enabled: true
+    min_ratio: 1.2             # Volumen > 1.2x media 20 períodos
+
+  # --- Entradas ---
+  entry:
+    long_confirmation: 1       # Velas a esperar tras señal (0 = inmediato)
+    short_confirmation: 1
+    max_spread: 0.5            # Spread máximo en puntos (evitar malas entradas)
+
+  # --- Salidas ---
+  exit:
+    type: "bollinger_return"   # bollinger_return | fixed_tp_sl | trailing
+    take_profit_pips: 0        # 0 = usar retorno a SMA(20)
+    stop_loss_pips: 0          # 0 = usar -2*ATR
+    trailing_stop: false
+    trailing_activation: 0.5   # % a favor para activar trailing
+
+# =============================================================================
+# STRATEGY 2: SMA CROSSOVER
+# =============================================================================
+sma_crossover:
+  enabled: false
+  description: "Cruce de medias móviles SMA 20/50"
+
+  timeframe: "1h"
+  bars_to_fetch: 300
+
+  sma:
+    fast_period: 20            # SMA rápida
+    slow_period: 50            # SMA lenta
+
+  rsi_filter:
+    enabled: true
+    period: 14
+    oversold: 30
+    overbought: 70
+
+  volume_filter:
+    enabled: true
+    min_ratio: 1.2
+
+  exit:
+    type: "crossover"          # crossover | fixed_tp_sl
+    stop_loss_atr: 1.5         # Stop-loss en ATR
+    take_profit_atr: 3.0       # Take-profit en ATR

@@ -1,0 +1,51 @@
+# =============================================================================
+# RISK MANAGEMENT CONFIGURATION
+# =============================================================================
+# Define cómo gestionas el riesgo. Cambia parámetros sin tocar código.
+
+risk:
+  # --- Método de sizing ---
+  method: "kelly_fractional"   # fixed | kelly_fractional | percent_equity
+
+  # --- Kelly Criterion ---
+  kelly:
+    enabled: true
+    fraction: 0.25             # Kelly fraccional (0.25 = 25% del Kelly total)
+    max_kelly_pct: 0.10        # Máximo % del capital por trade (cap)
+    history_trades: 50         # Trades para calcular win rate histórico
+
+  # --- Fixed sizing ---
+  fixed:
+    amount_per_trade: 12.5     # $12.5 por trade (25% de 50)
+
+  # --- Percent equity ---
+  percent_equity:
+    per_trade: 0.25            # 25% del equity por trade
+    max_per_trade: 0.50        # Máximo 50%
+
+  # --- Stop Loss ---
+  stop_loss:
+    enabled: true
+    default_pct: 0.02          # 2% del entry (obligatorio)
+    atr_multiplier: 1.5        # Stop como múltiplo de ATR
+    max_loss_per_day: 0.10     # 10% del capital = parar el día
+    max_loss_per_week: 0.20    # 20% del capital = parar la semana
+
+  # --- Take Profit ---
+  take_profit:
+    enabled: true
+    default_pct: 0.04          # 4% del entry (R:R 1:2)
+    atr_multiplier: 3.0        # TP como múltiplo de ATR
+    risk_reward_min: 1.5       # R:R mínimo aceptable
+
+  # --- Max Drawdown ---
+  drawdown:
+    max_daily: 0.10            # 10% drawdown diario → stop trading
+    max_total: 0.20            # 20% drawdown total → stop trading
+    cooldown_hours: 24         # Horas de enfriamiento tras drawdown
+
+  # --- Position limits ---
+  positions:
+    max_open: 2                # Máximo posiciones simultáneas
+    max_per_symbol: 1          # Máximo por símbolo
+    correlation_limit: 0.70    # Evitar pares correlacionados (ej: NASDAQ+SP500)

@@ -1,0 +1,419 @@
+# =============================================================================
+# AGENTS CONFIGURATION
+# =============================================================================
+# Cada agente tiene su propio % del capital, mercados, y personalidad.
+# Cambia aquí pesos y parámetros sin tocar código.
+# =============================================================================
+
+agents:
+  # ═══════════════════════════════════════════════════════════════════════
+  # 🤵 CONSERVADOR — 25% — Mercados europeos estables
+  # Busca movimientos de alta probabilidad. SMA crossover + confirmación.
+  # ═══════════════════════════════════════════════════════════════════════
+  conservative:
+    enabled: true
+    name: "Conservador"
+    capital_pct: 0.25
+    emoji: "🤵"
+    description: "Alta probabilidad en mercados europeos"
+    timeframe: "1h"
+    bars_to_fetch: 200
+    max_positions: 2
+    frequency: "1-3 trades/día"
+    horizon: "Intradía (1-8h)"
+    risk_stars: 2
+    target_win_rate: 0.70
+    symbols:
+      # 🇪🇸 España
+      - "IBEX35"
+      # 🇩🇪 Alemania
+      - "DAX40"
+      # 🇪🇺 Europa
+      - "EUROSTOXX50"
+      - "UK100"
+      - "CAC40"
+      - "FTSE100"
+      - "SMI20"
+      - "AEX"
+      - "OMXS30"
+      - "BEL20"
+      # 🇺🇸 Grandes índices USA (baja volatilidad)
+      - "US500"
+      # ETFs europeos
+      - "EZU"
+      - "VGK"
+      - "EWG"
+      - "EWU"
+      - "EWQ"
+      # Acciones europeas blue-chip
+      - "SAP"
+      - "SIE"
+      - "ALV"
+      - "MUV2"
+      - "BAYN"
+      - "BMW"
+      - "VOW3"
+      - "DTE"
+      - "DPW"
+      - "HEI"
+      - "LIN"
+      - "AIR"
+      - "OR"
+      - "MC"
+      - "SAN"
+      - "BNP"
+      - "ACA"
+      - "SU"
+      - "EL"
+      - "TTE"
+      - "IBE"
+      - "TEF"
+      - "BBVA"
+      - "SAN"
+      - "ITX"
+      - "FER"
+      - "ENG"
+      - "REP"
+      # Bonos
+      - "US10Y"
+      - "TLT"
+      - "IEI"
+      - "SHY"
+
+    strategy:
+      sma_fast: 20
+      sma_slow: 50
+      confirmation_candles: 2
+      volume_min_ratio: 1.3
+      rsi_period: 14
+      rsi_min: 40
+      rsi_max: 70
+
+    risk:
+      stop_loss_pct: 0.025
+      take_profit_pct: 0.05
+      max_drawdown: 0.15
+      kelly_fraction: 0.30
+
+  # ═══════════════════════════════════════════════════════════════════════
+  # 🏃 AGRESIVO — 35% — USA + alta volatilidad
+  # RSI extremo + Bollinger + momentum. Muchos trades, SL ajustado.
+  # ═══════════════════════════════════════════════════════════════════════
+  aggressive:
+    enabled: true
+    name: "Agresivo"
+    capital_pct: 0.35
+    emoji: "🏃"
+    description: "Maximiza rentabilidad con alta volatilidad"
+    timeframe: "15m"
+    bars_to_fetch: 200
+    max_positions: 3
+    frequency: "3-10 trades/día"
+    horizon: "Minutos - 1 día"
+    risk_stars: 5
+    target_win_rate: 0.50
+    symbols:
+      # 🇺🇸 Índices USA
+      - "US100"
+      - "US500"
+      - "US30"
+      - "US2000"
+      - "VIX"
+      # 🇺🇸 Sectores SP500
+      - "XLF"
+      - "XLK"
+      - "XLV"
+      - "XLE"
+      - "XLI"
+      - "XLP"
+      - "XLY"
+      - "XLU"
+      - "XLB"
+      - "XLRE"
+      - "XLC"
+      - "SMH"
+      - "IBB"
+      - "KRE"
+      # Mega-cap USA
+      - "AAPL"
+      - "MSFT"
+      - "GOOGL"
+      - "AMZN"
+      - "NVDA"
+      - "META"
+      - "TSLA"
+      - "AVGO"
+      - "TSM"
+      - "BRKB"
+      - "JPM"
+      - "V"
+      - "MA"
+      - "UNH"
+      - "HD"
+      - "PG"
+      - "COST"
+      - "NFLX"
+      - "ADBE"
+      - "CRM"
+      - "AMD"
+      - "INTC"
+      - "QCOM"
+      - "TXN"
+      - "MU"
+      - "ORCL"
+      - "IBM"
+      - "CSCO"
+      - "AMAT"
+      - "LRCX"
+      - "NOW"
+      - "UBER"
+      - "ABNB"
+      - "SQ"
+      - "PYPL"
+      - "SNAP"
+      - "RIVN"
+      - "LCID"
+      # 🇺🇸 Small caps volátiles
+      - "GME"
+      - "AMC"
+      - "PLTR"
+      - "MARA"
+      - "COIN"
+      - "RIOT"
+      - "HOOD"
+      - "SOFI"
+      # Crypto
+      - "BTCUSD"
+      - "ETHUSD"
+      - "SOLUSD"
+      - "DOGEUSD"
+
+    strategy:
+      rsi_period: 14
+      rsi_oversold: 25
+      rsi_overbought: 75
+      bb_period: 20
+      bb_std: 2.0
+      volume_min_ratio: 1.2
+      momentum_min: 0.15
+
+    risk:
+      stop_loss_pct: 0.015
+      take_profit_pct: 0.03
+      max_drawdown: 0.25
+      kelly_fraction: 0.20
+
+  # ═══════════════════════════════════════════════════════════════════════
+  # 🧐 PESIMISTA — 20% — Refugio, protección, activos contrarian
+  # Stress testing + margen de seguridad. Solo cuando todo está a favor.
+  # ═══════════════════════════════════════════════════════════════════════
+  pessimistic:
+    enabled: true
+    name: "Pesimista"
+    capital_pct: 0.20
+    emoji: "🧐"
+    description: "Busca refugio en incertidumbre"
+    timeframe: "1h"
+    bars_to_fetch: 300
+    max_positions: 1
+    frequency: "0-2 trades/día"
+    horizon: "1-5 días"
+    risk_stars: 3
+    target_win_rate: 0.65
+    symbols:
+      # 🥇 Materias primas
+      - "XAUUSD"
+      - "XAGUSD"
+      - "XPTUSD"
+      - "XPDUSD"
+      - "USOIL"
+      - "UKOIL"
+      - "NGAS"
+      - "CORN"
+      - "WHEAT"
+      - "COPPER"
+      # 🇯🇵 Asia-Pacífico
+      - "JP225"
+      - "CN50"
+      - "HK50"
+      - "ASX200"
+      - "KS11"
+      - "TW50"
+      # 🇺🇸 Refugio USA
+      - "USDX"
+      - "VIX"
+      - "US10Y"
+      - "US30Y"
+      - "US02Y"
+      - "TLT"
+      - "SHY"
+      - "IEF"
+      # ETFs inversos / protección
+      - "SH"
+      - "PSQ"
+      - "DOG"
+      - "SQQQ"
+      - "SPXS"
+      - "TZA"
+      - "UVXY"
+      - "SVXY"
+      # Forex principales
+      - "EURUSD"
+      - "USDJPY"
+      - "GBPUSD"
+      - "USDCHF"
+      - "USDCAD"
+      - "AUDUSD"
+      - "EURGBP"
+      - "EURJPY"
+      # Activos refugio tradicionales
+      - "GLD"
+      - "IAU"
+      - "SLV"
+      - "GDX"
+      - "DBC"
+      - "GSG"
+
+    strategy:
+      rsi_period: 14
+      rsi_safe_min: 40
+      rsi_safe_max: 60
+      min_trend_strength: 0.2
+      vix_max: 25
+      volume_max_ratio: 0.8
+      news_cooldown_hours: 48
+
+    risk:
+      stop_loss_pct: 0.02
+      take_profit_pct: 0.05
+      max_drawdown: 0.12
+      kelly_fraction: 0.25
+      base_pessimism: 0.15
+
+  # ═══════════════════════════════════════════════════════════════════════
+  # 🐢 LARGO PLAZO — 20% — Grandes tendencias, hold semanas/meses
+  # MACD mensual + SMA200 + RSI semanal. Pocos trades de alta convicción.
+  # ═══════════════════════════════════════════════════════════════════════
+  long_term:
+    enabled: true
+    name: "Largo Plazo"
+    capital_pct: 0.20
+    emoji: "🐢"
+    description: "Acumula patrimonio con tendencias de largo recorrido"
+    timeframe: "1d"
+    bars_to_fetch: 500
+    max_positions: 3
+    frequency: "1-4 operaciones/mes"
+    horizon: "Meses - años"
+    risk_stars: 2
+    target_win_rate: 0.80
+    symbols:
+      # 🏢 Mag-7 y large cap USA
+      - "AAPL"
+      - "GOOGL"
+      - "MSFT"
+      - "AMZN"
+      - "NVDA"
+      - "META"
+      - "TSLA"
+      - "AVGO"
+      - "TSM"
+      # 🏦 Financieras
+      - "JPM"
+      - "BAC"
+      - "WFC"
+      - "C"
+      - "GS"
+      - "MS"
+      - "BLK"
+      - "SCHW"
+      - "AXP"
+      - "V"
+      - "MA"
+      # 🏥 Salud
+      - "UNH"
+      - "JNJ"
+      - "PFE"
+      - "MRK"
+      - "ABBV"
+      - "LLY"
+      - "TMO"
+      - "DHR"
+      - "ISRG"
+      - "SYK"
+      # 🛒 Consumo
+      - "HD"
+      - "LOW"
+      - "COST"
+      - "WMT"
+      - "PG"
+      - "KO"
+      - "PEP"
+      - "MCD"
+      - "SBUX"
+      - "NKE"
+      # 💻 Tecnología
+      - "CRM"
+      - "ADBE"
+      - "ORCL"
+      - "NOW"
+      - "IBM"
+      - "CSCO"
+      - "QCOM"
+      - "TXN"
+      - "AMD"
+      - "MU"
+      # 🌍 Internacional
+      - "IBEX35"
+      - "DAX40"
+      - "EUROSTOXX50"
+      - "UK100"
+      - "JP225"
+      - "CN50"
+      # ETFs principales
+      - "SP500"
+      - "SPY"
+      - "QQQ"
+      - "VTI"
+      - "VXUS"
+      - "BND"
+      - "VNQ"
+      - "XLK"
+      - "XLV"
+      - "XLF"
+
+    strategy:
+      sma_200_period: 200
+      macd_fast: 12
+      macd_slow: 26
+      macd_signal: 9
+      rsi_weekly_period: 14
+      rsi_max: 60
+      soporte_tolerance: 0.05
+
+    risk:
+      stop_loss_pct: 0.10
+      take_profit_pct: null
+      max_drawdown: 0.20
+      kelly_fraction: 0.35
+
+# =============================================================================
+# GLOBAL SETTINGS
+# =============================================================================
+
+# ═══════════════════════════════════════════════════════════════════════
+# 💰 TESORERO — Protege beneficios (20% de cada ganancia)
+# ═══════════════════════════════════════════════════════════════════════
+  treasury:
+    enabled: true
+    name: "Tesorero"
+    capital_pct: 0.0  # No tiene capital asignado, acumula de beneficios
+    emoji: "💰"
+    description: "Protege el 20% de cada beneficio en una hucha"
+    treasury_pct: 0.20  # 20% de cada ganancia
+
+committee:
+  enabled: true
+  total_capital: 100
+  execution_interval_min: 15
+  dashboard_data_file: "data/dashboard_data.json"

@@ -1,0 +1,36 @@
+# =============================================================================
+# TELEGRAM NOTIFICATIONS CONFIGURATION
+# =============================================================================
+# Configura las notificaciones del bot. Cambia aquí, no en código.
+
+telegram:
+  enabled: true
+
+  # --- Bot Token (de @BotFather) ---
+  bot_token: ""                # Pon aquí tu token de Telegram Bot
+
+  # --- Chat IDs ---
+  chat_ids:
+    - 0                        # Pon aquí tu chat ID (o varios)
+
+  # --- Qué notificar ---
+  notifications:
+    trade_open: true           # Notificar apertura de trade
+    trade_close: true          # Notificar cierre de trade
+    error: true                # Notificar errores
+    daily_summary: true        # Resumen diario
+    weekly_summary: true       # Resumen semanal
+    drawdown_alert: true       # Alerta de drawdown
+    startup: true              # Notificar inicio del bot
+
+  # --- Formatos ---
+  format:
+    include_chart: false       # Incluir chart en resumen diario
+    include_pnl: true          # Incluir P&L
+    emoji: true                # Usar emojis
+    verbose: true              # Mensajes detallados vs compactos
+
+  # --- Horarios ---
+  schedule:
+    daily_summary: "22:00"     # Hora del resumen diario (CET/CEST)
+    weekly_summary: "sunday"   # Día del resumen semanal

@@ -1,0 +1,47 @@
+# =============================================================================
+# BROKER CONFIGURATION
+# =============================================================================
+# Cambia 'name' para elegir broker:
+#   sandbox   → Yahoo Finance (GRATIS, sin instalar nada, datos reales)
+#   hfm       → HFM + MT5 (necesita VPS Windows)
+#   justmarkets → JustMarkets + MT5
+#   etoro     → eToro (Copy Trading, no recomendado para bots)
+#
+# Modo sandbox: NO necesitas MT5, NO necesitas broker, NO necesitas VPS.
+# Solo pip install yfinance y funciona.
+# =============================================================================
+
+broker:
+  name: "sandbox"               # sandbox | hfm | justmarkets | etoro
+  platform: "sandbox"           # sandbox | mt5 | mt4 | rest_api
+
+  # --- Solo aplica si usas MT5 (HFM, JustMarkets) ---
+  mt5:
+    server: "HFM-Demo"
+    login: 0
+    password: ""
+    path: ""
+    timeout: 10000
+
+  # --- Cuenta (aplica a todos los modos) ---
+  account:
+    type: "sandbox"             # sandbox | demo | real
+    currency: "USD"
+    leverage: 1
+    initial_balance: 100        # Balance simulado en sandbox
+
+  # --- Trading limits ---
+  limits:
+    min_position_size: 0.01
+    max_position_size: 0.05
+    max_positions: 2
+    allowed_symbols:
+      - "US100"                 # NASDAQ
+      - "US500"                 # S&P 500
+      - "GER40"                 # DAX
+      - "IBEX35"                # IBEX 35 🇪🇸
+      - "UK100"                 # FTSE 100
+      - "XAUUSD"                # Oro
+      - "BTCUSD"                # Bitcoin
+      - "ETHUSD"                # Ethereum
+      - "AAPL"                  # Apple

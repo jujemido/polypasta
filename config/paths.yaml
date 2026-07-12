@@ -1,0 +1,22 @@
+# =============================================================================
+# FILE PATHS CONFIGURATION
+# =============================================================================
+# Rutas de archivos. Cambia aquí si quieres reorganizar.
+
+paths:
+  # --- Data ---
+  historical_data: "data/historical/"
+  trades_log: "data/logs/trades.csv"
+  performance_log: "data/logs/performance.json"
+  errors_log: "data/logs/errors.log"
+
+  # --- Dashboard ---
+  dashboard_html: "data/dashboard.html"
+  dashboard_port: 8050
+
+  # --- Estrategias ---
+  strategies_dir: "src/strategies/"
+
+  # --- Models / Optimization ---
+  optimization_results: "data/logs/optimization.json"
+  hyperopt_results: "data/logs/hyperopt_results.json"

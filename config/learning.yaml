@@ -1,0 +1,49 @@
+# =============================================================================
+# LEARNING CONFIGURATION
+# =============================================================================
+# Configura el sistema de aprendizaje y validación por IA.
+# =============================================================================
+
+ai_validator:
+  enabled: false  # Pon true cuando tengas la API key configurada
+  model: "deepseek/deepseek-v4-flash"
+  provider: "openrouter"
+  api_key: ""  # Se lee de variable de entorno OPENROUTER_API_KEY
+  api_base: "https://openrouter.ai/api/v1"
+
+  # Umbrales de confianza para la IA
+  thresholds:
+    approve_min_confidence: 0.60  # Mínima confianza para aprobar
+    block_if_reason_strong: true  # Bloquear si la razón de veto es fuerte
+    max_indicators_to_check: 10   # Nº máximo de indicadores a enviar a la IA
+
+  prompts:
+    system: |
+      Eres un validador de trades para un bot de trading algorítmico.
+      Tu trabajo es revisar cada señal y determinar si es SEGURA o no.
+      Debes ser conservador: si tienes dudas, BLOQUEA.
+
+      Reglas estrictas:
+      - Si el mercado está en un nivel de soporte/resistencia clave, aprueba.
+      - Si hay una noticia macro relevante pronto (CPI, FOMC, NFP), bloquea.
+      - Si la señal es contradictoria con la tendencia general, bloquea.
+      - Si el volumen es anormalmente bajo, bloquea.
+      - Si no ves razones claras para bloquear, aprueba.
+
+      Responde SIEMPRE con JSON:
+      {"decision": "approve" | "block", "confidence": 0.0-1.0, "reason": "..."}
+
+summary_logger:
+  enabled: true
+  max_entries: 1000  # Máximo entradas en el histórico
+  
+  # Formato del resumen detallado
+  detail_level: "high"  # high | medium | low
+  
+  # Guardar logs para entrenamiento futuro
+  save_for_training: true
+  training_data_path: "data/logs/training/"
+
+dashboard:
+  agent_logs_limit: 200  # Máximo entradas de log en dashboard
+  refresh_interval_ms: 30000  # 30 segundos

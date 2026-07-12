@@ -1,0 +1,21 @@
+# PolypastaBot — Dependencies
+# =============================================================================
+# Core
+MetaTrader5>=5.0.45
+pandas>=2.0
+numpy>=1.24
+
+# Estrategias e indicadores
+TA-Lib>=0.4.28
+
+# Config
+PyYAML>=6.0
+
+# Notificaciones
+python-telegram-bot>=20.0
+
+# Dashboard
+plotly>=5.15
+
+# Utils
+python-dotenv>=1.0
