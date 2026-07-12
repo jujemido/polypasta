@@ -58,6 +58,9 @@ class AgentOrchestrator:
         self._recent_logs: List[Dict] = []
         self._training_logs: List[Dict] = []
 
+        # Pipeline de phases
+        self.pipeline = Pipeline(config, self.agents, None, None, None)
+
         # Restore state from disk
         state_file = "data/state.json"
         if os.path.exists(state_file):
