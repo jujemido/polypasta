@@ -1,7 +1,6 @@
 """
-Agent Orchestrator — Ejecuta los 4 agentes en paralelo y consolida resultados.
+Agent Orchestrator — Ejecuta los agentes y consolida resultados.
 
-El orquestador:
 1. Lee config de agents.yaml
 2. Asigna capital a cada agente según su %
 3. Ejecuta el ciclo de cada agente
@@ -13,7 +12,6 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 import json
 import os
-import time
 
 from src.agents.base import BaseAgent, AgentAction
 from src.agents.conservative import ConservativeAgent
@@ -21,10 +19,10 @@ from src.agents.aggressive import AggressiveAgent
 from src.agents.pessimistic import PessimisticAgent
 from src.agents.long_term import LongTermAgent
 from src.agents.treasury import TreasuryAgent
+from src.learning.summary_logger import SummaryLogger
+from src.learning.ai_validator import AIValidator
 from src.utils.file_utils import log_error
 
-
-# Registry: agent_id → clase
 AGENT_REGISTRY = {
     "conservative": ConservativeAgent,
     "aggressive": AggressiveAgent,
@@ -36,9 +34,7 @@ AGENT_REGISTRY = {
 
 class AgentOrchestrator:
     """
-    Orquestador multi-agente.
-
-    Gestiona la creacion, ejecución y monitoreo de todos los agentes.
+    Orquestador multi-agente. Gestiona creación, ejecución y monitoreo.
     """
 
     def __init__(self, config: dict, total_balance: float):
@@ -47,21 +43,38 @@ class AgentOrchestrator:
         self.global_cfg = self.agents_cfg.get("committee", {})
         self.total_balance = total_balance
 
-        # Crear agentes
         self.agents: List[BaseAgent] = []
         self._create_agents()
 
-        # Data para dashboard
         self.dashboard_data_file = self.global_cfg.get(
             "dashboard_data_file", "data/dashboard_data.json"
         )
         self._history: List[Dict] = []
         self._cycle = 0
 
-        # Logger de summaries
-        from src.learning.summary_logger import SummaryLogger
+        # Learning & validation
         self.summary_logger = SummaryLogger(config)
+        self.ai_validator = AIValidator(config)
         self._recent_logs: List[Dict] = []
+        self._training_logs: List[Dict] = []
+
+        # Restore state from disk
+        state_file = "data/state.json"
+        if os.path.exists(state_file):
+            try:
+                with open(state_file) as f:
+                    state = json.load(f)
+                for a in self.agents:
+                    s = state.get("agents", {}).get(a.agent_id, {})
+                    if s.get("balance_actual"):
+                        a.balance_actual = s["balance_actual"]
+                    if s.get("total_trades"):
+                        a._total_trades = s["total_trades"]
+                    if s.get("win_trades"):
+                        a._win_trades = s["win_trades"]
+                print(f"📦 Estado restaurado desde {state_file}")
+            except Exception as e:
+                print(f"⚠️  No se pudo restaurar state: {e}")
 
     def _create_agents(self):
         """Crea los agentes según la config"""
@@ -70,7 +83,6 @@ class AgentOrchestrator:
             if not agent_cfg.get("enabled", True):
                 print(f"⏹️  Agent {agent_id} disabled in config")
                 continue
-
             agent = agent_class(self.cfg, agent_cfg, self.total_balance)
             self.agents.append(agent)
             print(f"  ✅ {agent} — {', '.join(agent.symbols)}")
@@ -80,66 +92,74 @@ class AgentOrchestrator:
     # ─────────────────────────────────────────────
 
     def ejecutar_ciclo(self, broker) -> List[AgentAction]:
-        """
-        Ejecuta un ciclo completo de todos los agentes.
-
-        Args:
-            broker: Conexión al broker
-
-        Returns:
-            Lista de acciones ejecutadas
-        """
+        """Ejecuta un ciclo de todos los agentes"""
         self._cycle += 1
-        acciones_ejecutadas = []
+        all_actions: List[AgentAction] = []
+        cycle_start = datetime.now()
+
+        print(f"\n🔄 Ciclo #{self._cycle} — {cycle_start.strftime('%H:%M:%S')}")
+        print("─" * 40)
 
         for agent in self.agents:
+            if agent.agent_id == "treasury":
+                continue
             try:
-                action = agent.ejecutar_ciclo(broker)
-                if action:
-                    # Ejecutar
-                    ticket = agent.ejecutar_action(broker, action)
-                    if ticket:
-                        acciones_ejecutadas.append(action)
-                        print(f"\n{action}")
-                    else:
-                        print(f"  ⚠️ {agent.emoji} {agent.name}: acción {action.action} {action.symbol} falló")
+                for symbol in agent.symbols:
+                    df = broker.get_rates(symbol, agent.timeframe, agent.bars_to_fetch)
+                    if df.empty:
+                        continue
+
+                    action = agent.analizar(broker, df, symbol)
+                    if action is None:
+                        continue
+
+                    # AI validation if enabled
+                    if self.ai_validator.enabled:
+                        decision = self.ai_validator.validate(action)
+                        if decision.get("blocked"):
+                            print(f"  🚫 {agent.emoji} {agent.name}: {symbol} BLOQUEADO por IA")
+                            print(f"     Motivo: {decision.get('reason', 'desconocido')}")
+                            self.summary_logger.log(agent.agent_id, agent.name, symbol,
+                                                     "blocked_by_ai", action)
+                            continue
+
+                    # Execute
+                    result = agent.ejecutar(action, broker)
+                    if result:
+                        all_actions.append(action)
+                        # Treasury: skim 20% of profit
+                        treasury = next((a for a in self.agents if a.agent_id == "treasury"), None)
+                        if treasury and hasattr(treasury, "process_profit") and action.tipo in ("buy", "sell"):
+                            profit = result.get("profit", 0)
+                            if profit > 0:
+                                treasury.process_profit(agent.name, symbol, profit)
+
+                        self.summary_logger.log(agent.agent_id, agent.name, symbol,
+                                                 "executed", action)
+
+                # Close positions with stopped-out SL/TP
+                agent.cerrar_posiciones_vencidas(broker)
+
             except Exception as e:
-                error_msg = f"{agent.emoji} {agent.name}: {e}"
-                print(f"  ❌ {error_msg}")
-                log_error("data/logs/errors.log", error_msg, {"agent": agent.agent_id})
+                log_error(f"Error en {agent.name}: {e}")
+                print(f"  ❌ {agent.emoji} {agent.name}: ERROR — {e}")
 
         # Actualizar dashboard
         self._actualizar_dashboard()
 
-        return acciones_ejecutadas
+        total_pnl = sum(a.balance_actual - a.balance_inicial for a in self.agents if a.agent_id != "treasury")
+        print(f"  ─────────────────────────────")
+        print(f"  💰 P&L neto del ciclo: ${total_pnl:+.2f}")
+        print(f"  📊 Dashboard actualizado → {self.dashboard_data_file}")
 
-    # ─────────────────────────────────────────────
-    # Dashboard data
-    # ─────────────────────────────────────────────
+        return all_actions
 
     def _actualizar_dashboard(self):
-        """Escribe datos para el dashboard React"""
+        """Genera el JSON para el dashboard React"""
         data = self._build_dashboard_data()
-
-        # Añadir a histórico (máx 500 puntos)
-        snapshot = {
-            "timestamp": datetime.now().isoformat(),
-            "cycle": self._cycle,
-            "agents": {a.agent_id: a.get_metrics() for a in self.agents},
-            "total": self._get_total_metrics(),
-        }
-        self._history.append(snapshot)
-        if len(self._history) > 500:
-            self._history = self._history[-500:]
-
-        data["history"] = self._history
-
-        # Escribir a JSON
         os.makedirs(os.path.dirname(self.dashboard_data_file), exist_ok=True)
         with open(self.dashboard_data_file, "w") as f:
             json.dump(data, f, indent=2, default=str)
-
-        # Guardar estado persistent (no volátil)
         state_file = "data/state.json"
         os.makedirs("data", exist_ok=True)
         with open(state_file, "w") as f:
@@ -159,19 +179,20 @@ class AgentOrchestrator:
     def _build_dashboard_data(self) -> Dict:
         """Construye el payload para el dashboard"""
         self._recent_logs = self.summary_logger.get_recent_logs(200)
+        training = self.summary_logger.get_training_logs(500)
         return {
             "last_updated": datetime.now().isoformat(),
             "total": self._get_total_metrics(),
             "agents": [a.get_metrics() for a in self.agents],
             "agent_logs": self._recent_logs,
-            "history": [],
+            "training_logs": training,
+            "history": self._history,
         }
 
     def _get_total_metrics(self) -> Dict:
-        """Métricas consolidadas de todos los agentes + tesorería"""
+        """Métricas consolidadas de agentes + tesorería"""
         trading_agents = [a for a in self.agents if a.agent_id != "treasury"]
         treasury = next((a for a in self.agents if a.agent_id == "treasury"), None)
-
         total_balance = sum(a.balance_actual for a in trading_agents)
         total_initial = sum(a.balance_inicial for a in trading_agents)
         treasury_balance = treasury.balance_actual if treasury else 0
@@ -184,19 +205,14 @@ class AgentOrchestrator:
             "trading_balance": round(total_balance, 2),
             "treasury_balance": round(treasury_balance, 2),
             "pnl_total": round(total_balance - total_initial, 2),
-            "pnl_pct": round((total_balance - total_initial) / total_initial * 100 if total_initial > 0 else 0, 2),
+            "pnl_pct": round((total_balance - total_initial) / max(total_initial, 0.01) * 100, 2),
             "total_trades": total_trades,
             "win_rate": round(total_wins / total_trades, 2) if total_trades > 0 else 0,
-            "agentes_activos": len([a for a in self.agents if a.agent_id != "treasury" and a.risk.can_trade()]),
-            "total_agentes": len([a for a in self.agents if a.agent_id != "treasury"]),
+            "agentes_activos": len([a for a in trading_agents if a.risk.can_trade()]),
+            "total_agentes": len(trading_agents),
         }
 
-    # ─────────────────────────────────────────────
-    # Reportes
-    # ─────────────────────────────────────────────
-
     def get_summary_text(self) -> str:
-        """Texto de resumen para Telegram"""
         lines = ["📊 <b>Resumen Multi-Agente</b>"]
         lines.append("─" * 30)
         for agent in self.agents:

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { DashboardData } from './types'
 import { useDashboard } from './hooks/useDashboard'
 import { AgentCard } from './components/AgentCard'
@@ -65,36 +66,49 @@ function DashboardInner({ data }: { data: DashboardData }) {
         </div>
       </header>
 
-      <main id="main-content" className="max-w-7xl mx-auto px-4 py-5 sm:px-6 space-y-6">
-        <OverallSummary total={data.total} />
+      <main id="main-content" className="max-w-7xl mx-auto px-4 py-5 sm:px-6">
 
-        {/* Agent cards — click to toggle */}
-        <section aria-label="Agentes">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {sortedAgents.map((agent) => (
-              <AgentCard
-                key={agent.agent_id}
-                agent={agent}
-                active={activeAgents.has(agent.agent_id)}
-                onToggle={() => toggleAgent(agent.agent_id)}
-              />
-            ))}
-          </div>
-        </section>
+        <Tabs defaultValue="dashboard" className="space-y-6">
+          <TabsList className="mb-2">
+            <TabsTrigger value="dashboard" className="text-xs">📊 Dashboard</TabsTrigger>
+            <TabsTrigger value="logs" className="text-xs">📋 Logs</TabsTrigger>
+          </TabsList>
 
-        {/* Charts & comparison */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <ComparisonView agents={sortedAgents} selectedAgents={activeAgents} />
-          {data.history && data.history.length > 0 && (
-            <EquityChart history={data.history} selectedAgents={activeAgents} />
-          )}
-        </div>
+          <TabsContent value="dashboard" className="space-y-6">
+            <OverallSummary total={data.total} />
 
-        {/* Positions & history */}
-        <PositionsHistory agents={sortedAgents} trades={data.recent_trades} selectedAgents={activeAgents} />
+            <section aria-label="Agentes">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {sortedAgents.map((agent) => (
+                  <AgentCard
+                    key={agent.agent_id}
+                    agent={agent}
+                    active={activeAgents.has(agent.agent_id)}
+                    onToggle={() => toggleAgent(agent.agent_id)}
+                  />
+                ))}
+              </div>
+            </section>
 
-        {/* Agent logs */}
-        <AgentLog logs={data.agent_logs} tradeSummaries={data.trade_summaries} selectedAgents={activeAgents} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <ComparisonView agents={sortedAgents} selectedAgents={activeAgents} />
+              {data.history && data.history.length > 0 && (
+                <EquityChart history={data.history} selectedAgents={activeAgents} />
+              )}
+            </div>
+
+            <PositionsHistory agents={sortedAgents} trades={data.recent_trades} selectedAgents={activeAgents} />
+          </TabsContent>
+
+          <TabsContent value="logs" className="space-y-4">
+            <AgentLog
+              logs={[...(data.agent_logs ?? []), ...(data.training_logs ?? [])]}
+              tradeSummaries={data.trade_summaries}
+              selectedAgents={activeAgents}
+            />
+          </TabsContent>
+        </Tabs>
+
       </main>
 
       <footer className="border-t border-border px-4 py-3 text-center text-[10px] text-muted-foreground">

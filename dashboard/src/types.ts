@@ -79,5 +79,6 @@ export interface DashboardData {
   recent_trades?: Trade[]
   agent_logs?: AgentLogEntry[]
   trade_summaries?: TradeSummaryEntry[]
+  training_logs?: AgentLogEntry[]
   history?: HistorySnapshot[]
 }
